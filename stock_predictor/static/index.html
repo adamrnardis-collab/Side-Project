@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Predictor MVP</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--gray-800);
+        }
+
+        .subtitle {
+            color: var(--gray-600);
+            font-size: 1rem;
+        }
+
+        .disclaimer {
+            background-color: #fef3c7;
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .disclaimer strong {
+            color: var(--danger);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: #15803d;
+        }
+
+        .status-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .status-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .card-header.top {
+            background-color: #dcfce7;
+            color: var(--success);
+        }
+
+        .card-header.bottom {
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background-color: var(--gray-50);
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ticker {
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .return-positive {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .return-negative {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .confidence {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray-600);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background-color: #fee2e2;
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .info {
+            background-color: #dbeafe;
+            color: var(--primary);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .quick-test {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .quick-test label {
+            margin-right: 0.5rem;
+            color: var(--gray-600);
+        }
+
+        .quick-test select {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>S&P 500 Stock Predictor</h1>
+            <p class="subtitle">ML-based 3-day forward return predictions</p>
+        </header>
+
+        <div class="disclaimer">
+            <strong>DISCLAIMER:</strong> This is a research tool, NOT financial advice.
+            Do not use for actual trading decisions. Past performance does not guarantee future results.
+        </div>
+
+        <div class="quick-test">
+            <label for="ticker-limit">Quick Test Mode:</label>
+            <select id="ticker-limit">
+                <option value="">All S&P 500 (~500 stocks)</option>
+                <option value="50">50 stocks (faster)</option>
+                <option value="100">100 stocks</option>
+                <option value="200">200 stocks</option>
+            </select>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="update-data-btn" onclick="updateData()">
+                <span class="spinner" style="display:none" id="update-spinner"></span>
+                Update Data
+            </button>
+            <button class="btn btn-primary" id="train-btn" onclick="trainModel()">
+                <span class="spinner" style="display:none" id="train-spinner"></span>
+                Train Model
+            </button>
+            <button class="btn btn-success" id="predict-btn" onclick="getPredictions()">
+                <span class="spinner" style="display:none" id="predict-spinner"></span>
+                Generate Picks
+            </button>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">Last Data Update</div>
+                <div class="status-value" id="last-data-update">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Last Model Training</div>
+                <div class="status-value" id="last-train">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Tickers Loaded</div>
+                <div class="status-value" id="n-tickers">0</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Model Status</div>
+                <div class="status-value" id="model-status">Not Trained</div>
+            </div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div class="results" id="results" style="display:none">
+            <div class="card">
+                <div class="card-header top">Top 5 Predicted Returns (Buy Signals)</div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Ticker</th>
+                                <th>Pred. Return</th>
+                                <th>95% CI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-5-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bottom">Bottom 5 Predicted Returns (Sell Signals)</div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Ticker</th>
+                                <th>Pred. Return</th>
+                                <th>95% CI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bottom-5-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="prediction-meta" style="display:none; text-align:center; margin-top:1rem; color:var(--gray-600);">
+            <p>Predictions as of: <span id="pred-date">-</span></p>
+            <p>Model residual std: <span id="residual-std">-</span></p>
+        </div>
+
+        <footer>
+            <p>Stock Predictor MVP | For Research Purposes Only</p>
+            <p><a href="/docs" target="_blank">API Documentation</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        function getMaxTickers() {
+            const select = document.getElementById('ticker-limit');
+            const value = select.value;
+            return value ? parseInt(value) : null;
+        }
+
+        function showMessage(text, type = 'info') {
+            const area = document.getElementById('message-area');
+            area.innerHTML = `<div class="${type}">${text}</div>`;
+            if (type !== 'error') {
+                setTimeout(() => area.innerHTML = '', 5000);
+            }
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '-';
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        }
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+
+                document.getElementById('last-data-update').textContent = formatDate(data.last_data_update);
+                document.getElementById('last-train').textContent = formatDate(data.last_train);
+                document.getElementById('n-tickers').textContent = data.n_tickers || 0;
+                document.getElementById('model-status').textContent = data.model_exists ? 'Ready' : 'Not Trained';
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+        }
+
+        async function updateData() {
+            const btn = document.getElementById('update-data-btn');
+            const spinner = document.getElementById('update-spinner');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            showMessage('Updating data... This may take several minutes for all tickers.');
+
+            try {
+                const maxTickers = getMaxTickers();
+                const body = { years: 5 };
+                if (maxTickers) body.max_tickers = maxTickers;
+
+                const response = await fetch(`${API_BASE}/update-data`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(`Data updated! Fetched ${data.n_tickers_fetched} tickers.`, 'info');
+                    fetchStatus();
+                } else {
+                    showMessage(`Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function trainModel() {
+            const btn = document.getElementById('train-btn');
+            const spinner = document.getElementById('train-spinner');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            showMessage('Training model... This may take a few minutes.');
+
+            try {
+                const maxTickers = getMaxTickers();
+                const body = {};
+                if (maxTickers) body.max_tickers = maxTickers;
+
+                const response = await fetch(`${API_BASE}/train`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(
+                        `Model trained! Samples: ${data.n_samples}, ` +
+                        `MSE: ${data.mse.toFixed(6)}, Spearman: ${data.spearman_corr.toFixed(4)}`,
+                        'info'
+                    );
+                    fetchStatus();
+                } else {
+                    showMessage(`Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function getPredictions() {
+            const btn = document.getElementById('predict-btn');
+            const spinner = document.getElementById('predict-spinner');
+
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            showMessage('Generating predictions...');
+
+            try {
+                const response = await fetch(`${API_BASE}/predictions`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayPredictions(data);
+                    document.getElementById('message-area').innerHTML = '';
+                } else {
+                    showMessage(`Error: ${data.detail}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        function displayPredictions(data) {
+            const results = document.getElementById('results');
+            const meta = document.getElementById('prediction-meta');
+            results.style.display = 'grid';
+            meta.style.display = 'block';
+
+            // Top 5
+            const top5Body = document.getElementById('top-5-body');
+            top5Body.innerHTML = '';
+            data.top_5.forEach((item, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td class="ticker">${item.ticker}</td>
+                    <td class="return-positive">${item.predicted_return_pct}</td>
+                    <td class="confidence">${(item.pred_lower * 100).toFixed(2)}% to ${(item.pred_upper * 100).toFixed(2)}%</td>
+                `;
+                top5Body.appendChild(row);
+            });
+
+            // Bottom 5
+            const bottom5Body = document.getElementById('bottom-5-body');
+            bottom5Body.innerHTML = '';
+            data.bottom_5.forEach((item, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td class="ticker">${item.ticker}</td>
+                    <td class="return-negative">${item.predicted_return_pct}</td>
+                    <td class="confidence">${(item.pred_lower * 100).toFixed(2)}% to ${(item.pred_upper * 100).toFixed(2)}%</td>
+                `;
+                bottom5Body.appendChild(row);
+            });
+
+            document.getElementById('pred-date').textContent = data.latest_date;
+            document.getElementById('residual-std').textContent = (data.residual_std * 100).toFixed(2) + '%';
+        }
+
+        // Initial status fetch
+        fetchStatus();
+
+        // Refresh status every 30 seconds
+        setInterval(fetchStatus, 30000);
+    </script>
+</body>
+</html>
