@@ -1,5 +1,5 @@
 [build]
-  base = "coachflow"
+  base = "journalspace"
   command = "npm run build"
   publish = ".next"
 
