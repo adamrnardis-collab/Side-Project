@@ -30,6 +30,10 @@ export default function DashboardPage() {
 
       // Load coach data
       const coachResponse = await fetch(`/api/coach/${coachId}`);
+      if (!coachResponse.ok) {
+        setError('Failed to load your profile');
+        return;
+      }
       const coachResult = await coachResponse.json();
 
       if (coachResult.success) {
@@ -41,6 +45,10 @@ export default function DashboardPage() {
 
       // Load today's actions
       const actionsResponse = await fetch(`/api/actions/today?coachId=${coachId}`);
+      if (!actionsResponse.ok) {
+        setError('Failed to load today\'s actions');
+        return;
+      }
       const actionsResult = await actionsResponse.json();
 
       if (actionsResult.success) {
@@ -66,6 +74,10 @@ export default function DashboardPage() {
         body: JSON.stringify({ coachId: coach.id }),
       });
 
+      if (!response.ok) {
+        setError('Failed to generate actions. Please try again.');
+        return;
+      }
       const result = await response.json();
 
       if (result.success) {
@@ -88,6 +100,10 @@ export default function DashboardPage() {
         body: JSON.stringify({ status }),
       });
 
+      if (!response.ok) {
+        setError('Failed to update action');
+        return;
+      }
       const result = await response.json();
 
       if (result.success) {
@@ -99,9 +115,11 @@ export default function DashboardPage() {
         // Reload coach data to update stats
         if (coach) {
           const coachResponse = await fetch(`/api/coach/${coach.id}`);
-          const coachResult = await coachResponse.json();
-          if (coachResult.success) {
-            setCoach(coachResult.data.coach);
+          if (coachResponse.ok) {
+            const coachResult = await coachResponse.json();
+            if (coachResult.success) {
+              setCoach(coachResult.data.coach);
+            }
           }
         }
       }
@@ -116,6 +134,10 @@ export default function DashboardPage() {
         method: 'POST',
       });
 
+      if (!response.ok) {
+        setError('Failed to rewrite action');
+        return;
+      }
       const result = await response.json();
 
       if (result.success) {

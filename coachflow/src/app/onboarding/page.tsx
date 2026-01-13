@@ -38,6 +38,10 @@ export default function OnboardingPage() {
         body: JSON.stringify(formData),
       });
 
+      if (!response.ok) {
+        setError('Failed to create account. Please try again.');
+        return;
+      }
       const result = await response.json();
 
       if (result.success) {

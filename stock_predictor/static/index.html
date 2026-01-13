@@ -417,6 +417,10 @@
         async function fetchStatus() {
             try {
                 const response = await fetch(`${API_BASE}/status`);
+                if (!response.ok) {
+                    console.error('Failed to fetch status:', response.status);
+                    return;
+                }
                 const data = await response.json();
 
                 document.getElementById('last-data-update').textContent = formatDate(data.last_data_update);
@@ -447,14 +451,20 @@
                     body: JSON.stringify(body)
                 });
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        showMessage(`Error: ${errorData.detail || 'Failed to update data'}`, 'error');
+                    } catch {
+                        showMessage(`Error: Failed to update data (${response.status})`, 'error');
+                    }
+                    return;
+                }
                 const data = await response.json();
 
-                if (response.ok) {
-                    showMessage(`Data updated! Fetched ${data.n_tickers_fetched} tickers.`, 'info');
-                    fetchStatus();
-                } else {
-                    showMessage(`Error: ${data.detail}`, 'error');
-                }
+                showMessage(`Data updated! Fetched ${data.n_tickers_fetched} tickers.`, 'info');
+                fetchStatus();
             } catch (error) {
                 showMessage(`Error: ${error.message}`, 'error');
             } finally {
@@ -482,18 +492,24 @@
                     body: JSON.stringify(body)
                 });
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        showMessage(`Error: ${errorData.detail || 'Failed to train model'}`, 'error');
+                    } catch {
+                        showMessage(`Error: Failed to train model (${response.status})`, 'error');
+                    }
+                    return;
+                }
                 const data = await response.json();
 
-                if (response.ok) {
-                    showMessage(
-                        `Model trained! Samples: ${data.n_samples}, ` +
-                        `MSE: ${data.mse.toFixed(6)}, Spearman: ${data.spearman_corr.toFixed(4)}`,
-                        'info'
-                    );
-                    fetchStatus();
-                } else {
-                    showMessage(`Error: ${data.detail}`, 'error');
-                }
+                showMessage(
+                    `Model trained! Samples: ${data.n_samples}, ` +
+                    `MSE: ${data.mse.toFixed(6)}, Spearman: ${data.spearman_corr.toFixed(4)}`,
+                    'info'
+                );
+                fetchStatus();
             } catch (error) {
                 showMessage(`Error: ${error.message}`, 'error');
             } finally {
@@ -512,14 +528,21 @@
 
             try {
                 const response = await fetch(`${API_BASE}/predictions`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        showMessage(`Error: ${errorData.detail || 'Failed to get predictions'}`, 'error');
+                    } catch {
+                        showMessage(`Error: Failed to get predictions (${response.status})`, 'error');
+                    }
+                    return;
+                }
                 const data = await response.json();
 
-                if (response.ok) {
-                    displayPredictions(data);
-                    document.getElementById('message-area').innerHTML = '';
-                } else {
-                    showMessage(`Error: ${data.detail}`, 'error');
-                }
+                displayPredictions(data);
+                document.getElementById('message-area').innerHTML = '';
             } catch (error) {
                 showMessage(`Error: ${error.message}`, 'error');
             } finally {
